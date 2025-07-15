@@ -1,0 +1,45 @@
+---
+import Accordion from './Accordion.astro';
+
+let faqs: { question: string; answer: string }[] = [];
+try {
+    const response = await fetch('http://localhost:4321/api/faqs');
+    if (response.ok) {
+        const rawFaqs = await response.json();
+        if (rawFaqs && rawFaqs.length > 0 && rawFaqs[0].question) {
+            const questions = rawFaqs[0].question;
+            const answers = rawFaqs[0].answer;
+            faqs = questions.map((q: string, index: number) => ({
+                question: q,
+                answer: answers[index] || 'No hay respuesta disponible.'
+            }));
+        }
+    } else {
+        console.error('Error fetching FAQs:', response.statusText);
+    }
+} catch (error) {
+    console.error('Failed to fetch FAQs:', error);
+}
+---
+
+<div class="faq-container">
+    {faqs.length > 0 ? (
+        faqs.map(faq => <Accordion question={faq.question} answer={faq.answer} />)
+    ) : (
+        <p>No se pudieron cargar las preguntas y respuestas.</p>
+    )}
+</div>
+
+<style>
+    .faq-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        width: 100%;
+    }
+
+    p {
+        color: var(--text-color);
+        text-align: center;
+    }
+</style>
