@@ -1,65 +1,59 @@
 import type { APIRoute } from 'astro';
-import { promises as fs } from 'fs';
-import path from 'path';
 
-export const prerender = false; // Requerido para endpoints que reciben POST
+// La directiva prerender = false es necesaria para endpoints dinámicos en SSR.
+export const prerender = false;
 
-const dataFilePath = path.resolve(process.cwd(), 'src/data/faqs.json');
+// La clave bajo la cual guardaremos los datos en Cloudflare KV.
+const FAQS_KEY = 'faqs-data';
 
-// Función para obtener los datos de las FAQs desde el archivo
-async function getFaqs() {
+// Maneja las solicitudes GET para devolver las FAQs desde KV.
+export const GET: APIRoute = async (context) => {
   try {
-    const data = await fs.readFile(dataFilePath, 'utf-8');
-    return JSON.parse(data);
-  } catch (error) {
-    // Si el archivo no existe o hay un error, devuelve un array vacío
-    return [];
-  }
-}
+    // Obtenemos el binding de KV desde el contexto de ejecución de Cloudflare.
+    const faqsKv = context.locals.runtime.env.FAQS_KV;
+    const faqsData = await faqsKv.get(FAQS_KEY, 'json');
 
-// Función para guardar los datos de las FAQs en el archivo
-async function setFaqs(newFaqs: any) {
-  try {
-    await fs.mkdir(path.dirname(dataFilePath), { recursive: true });
-    await fs.writeFile(dataFilePath, JSON.stringify(newFaqs, null, 2));
-  } catch (error) {
-    console.error('Error guardando las FAQs:', error);
-    throw new Error('No se pudieron guardar las FAQs');
-  }
-}
+    // Si no hay datos en KV, devolvemos un array vacío para evitar errores.
+    if (!faqsData) {
+      return new Response(JSON.stringify([]), {
+        headers: { 'content-type': 'application/json' },
+      });
+    }
 
-// Maneja las solicitudes GET para devolver las FAQs
-export const GET: APIRoute = async () => {
-  const faqsData = await getFaqs();
-  return new Response(JSON.stringify(faqsData), {
-    headers: { 'content-type': 'application/json' },
-  });
+    return new Response(JSON.stringify(faqsData), {
+      headers: { 'content-type': 'application/json' },
+    });
+  } catch (error) {
+    console.error('Error leyendo desde KV:', error);
+    return new Response(JSON.stringify({ error: 'No se pudieron obtener las FAQs desde KV' }), {
+      status: 500,
+    });
+  }
 };
 
-// Maneja las solicitudes POST para actualizar las FAQs
-export const POST: APIRoute = async ({ request }) => {
+// Maneja las solicitudes POST para actualizar las FAQs en KV.
+export const POST: APIRoute = async (context) => {
   try {
-    const body = await request.json();
+    const body = await context.request.json();
 
     // Validación básica del formato esperado
     if (!Array.isArray(body) || !body[0]?.question || !body[0]?.answer) {
       return new Response(JSON.stringify({ error: 'Formato de datos inválido' }), {
         status: 400,
-        headers: { 'content-type': 'application/json' },
       });
     }
 
-    await setFaqs(body);
+    // Obtenemos el binding de KV y guardamos los nuevos datos.
+    const faqsKv = context.locals.runtime.env.FAQS_KV;
+    await faqsKv.put(FAQS_KEY, JSON.stringify(body));
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
-      headers: { 'content-type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error en el webhook de FAQs:', error);
+    console.error('Error en el webhook de FAQs (KV):', error);
     return new Response(JSON.stringify({ error: 'Error procesando la solicitud' }), {
       status: 500,
-      headers: { 'content-type': 'application/json' },
     });
   }
 };
