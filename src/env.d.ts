@@ -1,11 +1,11 @@
-/// <reference types="@astrojs/cloudflare" />
+/// <reference types="astro/client" />
+
+type KVNamespace = import('@cloudflare/workers-types').KVNamespace;
+
+type Runtime = import('@astrojs/cloudflare').Runtime<{
+    FAQS_KV: KVNamespace;
+}>;
 
 declare namespace App {
-  interface Locals {
-    runtime: import('@astrojs/cloudflare').Runtime<Env>;
-  }
+    interface Locals extends Runtime {}
 }
-
-type Env = {
-  FAQS_KV: KVNamespace;
-};

@@ -7,52 +7,45 @@ export const prerender = false;
 const FAQS_KEY = 'faqs-data';
 
 // Maneja las solicitudes GET para devolver las FAQs desde KV.
-export const GET: APIRoute = async (context) => {
+export const GET: APIRoute = async ({ locals }) => {
   try {
-    // Obtenemos el binding de KV desde el contexto de ejecución de Cloudflare.
-    const faqsKv = context.locals.runtime.env.FAQS_KV;
+    // Accedemos al binding de KV a través de locals.env, la forma correcta.
+    const faqsKv = locals.env.FAQS_KV;
     const faqsData = await faqsKv.get(FAQS_KEY, 'json');
 
-    // Si no hay datos en KV, devolvemos un array vacío para evitar errores.
-    if (!faqsData) {
-      return new Response(JSON.stringify([]), {
-        headers: { 'content-type': 'application/json' },
-      });
-    }
-
-    return new Response(JSON.stringify(faqsData), {
+    return new Response(JSON.stringify(faqsData || []), {
       headers: { 'content-type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error leyendo desde KV:', error);
-    return new Response(JSON.stringify({ error: 'No se pudieron obtener las FAQs desde KV' }), {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido al leer de KV';
+    console.error('Error en GET de FAQs:', errorMessage);
+    return new Response(JSON.stringify({ error: 'No se pudieron obtener las FAQs', details: errorMessage }), {
       status: 500,
     });
   }
 };
 
 // Maneja las solicitudes POST para actualizar las FAQs en KV.
-export const POST: APIRoute = async (context) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   try {
-    const body = await context.request.json();
+    const body = await request.json();
 
-    // Validación básica del formato esperado
-    if (!Array.isArray(body) || !body[0]?.question || !body[0]?.answer) {
-      return new Response(JSON.stringify({ error: 'Formato de datos inválido' }), {
+    if (!Array.isArray(body) || !body.every(item => item.question && item.answer)) {
+      return new Response(JSON.stringify({ error: 'Formato de datos inválido. Se esperaba un array de objetos con question y answer.' }), {
         status: 400,
       });
     }
 
-    // Obtenemos el binding de KV y guardamos los nuevos datos.
-    const faqsKv = context.locals.runtime.env.FAQS_KV;
+    const faqsKv = locals.env.FAQS_KV;
     await faqsKv.put(FAQS_KEY, JSON.stringify(body));
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ success: true, message: 'FAQs actualizadas correctamente.' }), {
       status: 200,
     });
   } catch (error) {
-    console.error('Error en el webhook de FAQs (KV):', error);
-    return new Response(JSON.stringify({ error: 'Error procesando la solicitud' }), {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido al escribir en KV';
+    console.error('Error en POST de FAQs:', errorMessage);
+    return new Response(JSON.stringify({ error: 'Error procesando la solicitud', details: errorMessage }), {
       status: 500,
     });
   }
