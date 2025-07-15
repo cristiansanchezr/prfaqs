@@ -1,27 +1,9 @@
 [
   {
     "question": [
-      "¿Cuál es la capital de Francia?",
-      "¿En qué año llegó el hombre a la Luna?",
-      "¿Qué gas respiramos principalmente?",
-      "¿Cuál es el metal más ligero?",
-      "¿Quién pintó La noche estrellada?",
-      "¿Qué planeta es conocido como el rojo?",
-      "¿Cuál es la moneda de Japón?",
-      "¿En qué continente está Egipto?",
-      "¿Qué instrumento mide la intensidad sísmica?",
       "¿Cuál es la fórmula química del agua?"
     ],
     "answer": [
-      "París.\nSe ubica al norte del país.\nEs conocida como la “Ciudad Luz”.\nAlberga monumentos emblemáticos.",
-      "En 1969.\nLa misión fue el Apolo 11.\nNeil Armstrong fue el primer astronauta.\nPronunció “un gran paso para la humanidad”.",
-      "Oxígeno.\nConstituye cerca del 21 % del aire.\nEs esencial para la vida.\nParticipa en la respiración celular.",
-      "El litio.\nPertenece a los metales alcalinos.\nEs usado en baterías recargables.\nReacciona fácilmente con el agua.",
-      "Vincent van Gogh.\nLa realizó en 1889.\nRepresenta el cielo de Saint-Rémy.\nEs ícono del posimpresionismo.",
-      "Marte.\nSu color proviene del óxido de hierro.\nTiene los volcanes más grandes.\nSe investiga para futura colonización.",
-      "El yen.\nSe simboliza con ¥.\nEs emitido por el Banco de Japón.\nTiene billetes y monedas diversas.",
-      "África.\nPosee parte de la península del Sinaí.\nEl Nilo cruza su territorio.\nFamoso por pirámides y templos.",
-      "El sismógrafo.\nRegistra movimientos de la corteza.\nGenera sismogramas para análisis.\nAyuda a alertar sobre terremotos.",
       "H₂O.\nContiene dos átomos de hidrógeno.\nY uno de oxígeno.\nEs vital para organismos vivos."
     ]
   }
