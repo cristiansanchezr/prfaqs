@@ -9,8 +9,8 @@ const FAQS_KEY = 'faqs-data';
 // Maneja las solicitudes GET para devolver las FAQs desde KV.
 export const GET: APIRoute = async ({ locals }) => {
   try {
-    // Accedemos al binding de KV a través de locals.env, la forma correcta.
-    const faqsKv = locals.env.FAQS_KV;
+    // Accedemos al binding de KV directamente desde locals.
+    const faqsKv = locals.FAQS_KV;
     const faqsData = await faqsKv.get(FAQS_KEY, 'json');
 
     return new Response(JSON.stringify(faqsData || []), {
@@ -36,7 +36,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       });
     }
 
-    const faqsKv = locals.env.FAQS_KV;
+    const faqsKv = locals.FAQS_KV;
     await faqsKv.put(FAQS_KEY, JSON.stringify(body));
 
     return new Response(JSON.stringify({ success: true, message: 'FAQs actualizadas correctamente.' }), {
